@@ -190,7 +190,7 @@ xapic_lapic::id()
       __builtin_return_address(0));
   }
 
-  return HWID(xapic[ID]>>24);
+  return HWID(xapic[ID]>>16);
 }
 
 // Acknowledge interrupt.
@@ -205,7 +205,7 @@ void
 xapic_lapic::send_ipi(struct cpu *c, int ino)
 {
   pushcli();
-  xapicw(ICRHI, c->hwid.num << 24);
+  xapicw(ICRHI, c->hwid.num << 16);
   xapicw(ICRLO, FIXED | DEASSERT | ino);
   if (xapicwait() < 0)
     panic("xapic_lapic::send_ipi: xapicwait failure");
@@ -223,7 +223,7 @@ xapic_lapic::start_ap(struct cpu *c, u32 addr)
   // Send INIT (level-triggered) interrupt to reset other CPU.
   
 
-  xapicw(ICRHI, c->hwid.num<<24);
+  xapicw(ICRHI, c->hwid.num<<16);
   xapicw(ICRLO, INIT | LEVEL | ASSERT);
   xapicwait();
   microdelay(10000);
@@ -237,7 +237,7 @@ xapic_lapic::start_ap(struct cpu *c, u32 addr)
   // should be ignored, but it is part of the official Intel algorithm.
   // Bochs complains about the second one.  Too bad for Bochs.
   for(i = 0; i < 2; i++){
-    xapicw(ICRHI, c->hwid.num<<24);
+    xapicw(ICRHI, c->hwid.num<<16);
     xapicw(ICRLO, STARTUP | (addr>>12));
     microdelay(200);
   }

@@ -1,4 +1,4 @@
-# Custom config file?  Otherwise use defaults.
+# custom config file?  Otherwise use defaults.
 -include config.mk
 # Quiet.  Run "make Q=" for a verbose build.
 Q          ?= @
@@ -6,11 +6,11 @@ Q          ?= @
 # ELF.  E.g., x86_64-jos-elf-
 TOOLPREFIX ?=
 # QEMU binary
-QEMU       ?= qemu-system-x86_64
+QEMU       ?= ~/Downloads/QEMU/x86_64-softmmu/qemu-system-x86_64
 # Number of CPUs to emulate
-QEMUSMP    ?= 8
+QEMUSMP    ?= 4
 # RAM to simulate (in MB)
-QEMUMEM    ?= 512
+QEMUMEM    ?= 4096
 # Default hardware build target.  See param.h for others.
 HW         ?= qemu
 # Enable C++ exception handling in the kernel.
@@ -204,10 +204,9 @@ endif
 QEMUOPTS += -smp $(QEMUSMP) -m $(QEMUMEM) \
 	$(if $(QEMUOUTPUT),-serial file:$(QEMUOUTPUT),-serial mon:stdio) \
 	-nographic \
-	-numa node -numa node \
-	-net user -net nic,model=e1000 \
-	$(if $(QEMUNOREDIR),,-redir tcp:2323::23 -redir tcp:8080::80) \
 	$(if $(QEMUAPPEND),-append "$(QEMUAPPEND)",) \
+
+QEMUOPTS += -enable-kvm -machine kernel-irqchip=off
 
 ## One NUMA node per CPU when mtrace'ing
 ifeq ($(HW),linuxmtrace)

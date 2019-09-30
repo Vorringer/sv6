@@ -23,4 +23,4 @@ typedef uptr            paddr;
 typedef u64             pme_t;
 
 // Logical CPU ID type
-typedef u8              cpuid_t;
+typedef u16              cpuid_t;

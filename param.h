@@ -65,7 +65,7 @@
 //
 #if defined(HW_qemu)
 #define DEBUG         1
-#define NCPU          8   // maximum number of CPUs
+#define NCPU          512   // maximum number of CPUs
 #define NSOCKET       2
 #define PERFSIZE      (16<<20ull)
 #define MEMIDE        0
