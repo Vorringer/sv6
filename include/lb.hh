@@ -8,7 +8,7 @@ template<int N>
 struct random_permutation {
  public:
   random_permutation() : i_(0) {
-    assert(N <= 256);
+    //assert(N <= 256);
     for (int i = 0; i < N; i++)
       x_[i] = i;
   }

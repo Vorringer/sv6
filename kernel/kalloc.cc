@@ -587,12 +587,14 @@ static phys_map mem;
 static void
 parse_mb_map(struct Mbdata *mb)
 {
-  if(!(mb->flags & (1<<6)))
-    panic("multiboot header has no memory map");
+cprintf("mb->flags: 0x%lx\n", (unsigned long)mb->flags);
+//  if(!(mb->flags & (1<<6)))
+//    panic("multiboot header has no memory map");
 
   // Print the map
   uint8_t *p = (uint8_t*) p2v(mb->mmap_addr);
   uint8_t *ep = p + mb->mmap_length;
+cprintf("p[0x%lx], ep[0x%lx]\n", (unsigned long)p, (unsigned long)ep);
   // XXX QEMU's pc-bios/optionrom/multiboot.S has a bug that makes
   // mmap_length one entry short.
   while (p < ep) {
@@ -607,21 +609,25 @@ parse_mb_map(struct Mbdata *mb)
   // regions, so we have to clean it up.
 
   // Add and merge usable regions
+  unsigned long total = 0;
+  const unsigned long mem_limit = -1;//34359738368;
   p = (uint8_t*) p2v(mb->mmap_addr);
   while (p < ep) {
     struct Mbmem *mbmem = (Mbmem *)p;
     p += 4 + mbmem->size;
-    if (mbmem->type == 1)
+    if (mbmem->type == 1 && total + mbmem->length <= mem_limit)
       mem.add(mbmem->base, mbmem->base + mbmem->length);
+    total += mbmem->length;
   }
-
+  total = 0;
   // Remove unusable regions
   p = (uint8_t*) p2v(mb->mmap_addr);
   while (p < ep) {
     struct Mbmem *mbmem = (Mbmem *)p;
     p += 4 + mbmem->size;
-    if (mbmem->type != 1)
+    if (mbmem->type != 1 && total + mbmem->length <= mem_limit)
       mem.remove(mbmem->base, mbmem->base + mbmem->length);
+    total += mbmem->length;
   }
 }
 
@@ -968,9 +974,7 @@ initphysmem(paddr mbaddr)
 {
   // First address after kernel loaded from ELF file
   extern char end[];
-
   parse_mb_map((Mbdata*) p2v(mbaddr));
-
   // Consider first 1MB of memory unusable
   mem.remove(0, 0x100000);
 
@@ -986,10 +990,9 @@ void
 initkalloc(void)
 {
   if (VERBOSE)
-    cprintf("%lu mbytes\n", mem.bytes() / (1<<20));
-
+    cprintf("%lu mbytes\n", mem.bytes() / (1<<20)); 
   // Construct one or more buddy allocators for each NUMA node
-
+cprintf("total bytes %lu\n", mem.bytes());
 #if KALLOC_LOAD_BALANCE
   void *base = p2v(mem.base());
   size_t sz = (size_t) p2v(mem.max()) - (size_t) base;
@@ -1002,7 +1005,6 @@ initkalloc(void)
 
     if (ALLOC_MEMSET)
       console.println("kalloc: Clearing node ", node.id);
-
     // Divide the node into at least subnodes buddy allocators
 #if KALLOC_BUDDY_PER_CPU
     size_t subnodes = node.cpus.size();
@@ -1017,11 +1019,18 @@ initkalloc(void)
     for (auto &reg : node_mem.get_regions()) {
       if (ALLOC_MEMSET)
         memset(p2v(reg.base), 1, reg.end - reg.base);
-
       // Subdivide region
       auto remaining = reg;
+cprintf("hehe0\n");
       while (remaining.base < remaining.end) {
-        size_t subsize = std::min(remaining.end - remaining.base, size_limit);
+        size_t subsize;
+        if (remaining.base < KBASEEND - KBASE && 
+            remaining.base + 
+               std::min(remaining.end - remaining.base, size_limit) >= KBASEEND - KBASE) 
+            subsize = KBASEEND - KBASE - remaining.base;
+        else 
+            subsize = std::min(remaining.end - remaining.base, size_limit);
+cprintf("remaining base: pa[0x%lx], va[0x%lx]\n", (unsigned long)remaining.base, (unsigned long)p2v(remaining.base));
 #if KALLOC_LOAD_BALANCE
         // Make an allocator for [base, base+sz) but only mark
         // [reg.base, reg.base+size) as free.  This allows us to move
@@ -1031,7 +1040,8 @@ initkalloc(void)
 #else
         // The buddy allocator can manage any page within this node
         auto buddy = buddy_allocator(p2v(remaining.base), subsize,
-                                     p2v(reg.base), reg.end - reg.base);
+                                     (void *)KBASE_LOW, 
+                                     KBASEEND - KBASE + (KBASE_LOW_END - KBASE_LOW));
 #endif
         if (!buddy.empty()) {
           // Get some stats
@@ -1046,7 +1056,10 @@ initkalloc(void)
         // XXX(Austin) It would be better if we knew what free_init
         // has rounded the upper bound to.
         remaining.base += subsize;
+
+cprintf("hehe2\n");
       }
+cprintf("hehe3\n");
     }
     size_t node_buddies = buddies.size() - node_low;
 

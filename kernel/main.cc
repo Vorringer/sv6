@@ -71,6 +71,7 @@ static cpuid_t bcpuid;
 void
 mpboot(void)
 {
+
   initseg(&cpus[bcpuid]);
   inittls(&cpus[bcpuid]);       // Requires initseg
   initpg();
@@ -170,20 +171,29 @@ void
 cmain(u64 mbmagic, u64 mbaddr)
 {
   extern u64 cpuhz;
-
   // Make cpus[0] work.  CPU 0's percpu data is pre-allocated directly
   // in the image.  *cpu and such won't work until we inittls.
   percpu_offsets[0] = __percpu_start;
 
   inituart();
+/*
+cprintf("mbaddr: 0x%lx\n", mbaddr);
+int offset = 0;
+mbaddr += offset;
+Mbdata* tmp = (Mbdata*) p2v(mbaddr);
+tmp->mmap_addr += offset;
+tmp->drives_addr += offset;
+tmp->mods_addr += offset;
+*/
   initphysmem(mbaddr);
   initpg();                // Requires initphysmem
   inithz();        // CPU Hz, microdelay
   initseg(&cpus[0]);
   inittls(&cpus[0]);       // Requires initseg
-
   initacpitables();        // Requires initpg, inittls
+cprintf("after initacpitables\n");
   initlapic();             // Requires initpg
+cprintf("after initlapic\n");
   initnuma();              // Requires initacpitables, initlapic
   initpercpu();            // Requires initnuma
   initcpus();              // Requires initnuma, initpercpu,
@@ -196,7 +206,7 @@ cmain(u64 mbmagic, u64 mbaddr)
 
   inituartcons();          // Requires interrupt routing
   initcga();
-
+cprintf("after initcga\n");
   initpageinfo();          // Requires initnuma
 
   // Some global constructors require mycpu()->id (via myid()) which
@@ -216,8 +226,11 @@ cmain(u64 mbmagic, u64 mbaddr)
   initfpu();               // Requires nothing
   initmsr();               // Requires nothing
   initcmdline();
+cprintf("after initcmdline\n");
   initkalloc();            // Requires initpageinfo
+cprintf("after initkalloc\n");
   initz();
+cprintf("after initz\n");
   initproc();      // process table
   initsched();     // scheduler run queues
   initidle();

@@ -89,13 +89,13 @@
 //
 #elif defined(HW_josmp)
 #define DEBUG         0
-#define NCPU          16  // maximum number of CPUs
-#define NSOCKET       4
+#define NCPU          512  // maximum number of CPUs
+#define NSOCKET       256
 #define PERFSIZE      (128<<20ull)
 #define E1000_PORT    1   // use second E1000 port
 #elif defined(HW_ud0) || defined(HW_ud1)
-#define NCPU          4   // maximum number of CPUs
-#define NSOCKET       2
+#define NCPU          512   // maximum number of CPUs
+#define NSOCKET       256
 #define PERFSIZE      (128<<20ull)
 #define UART_BAUD     115200
 #elif defined(HW_tom)

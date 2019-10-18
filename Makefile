@@ -6,13 +6,13 @@ Q          ?= @
 # ELF.  E.g., x86_64-jos-elf-
 TOOLPREFIX ?=
 # QEMU binary
-QEMU       ?= ~/Downloads/QEMU/x86_64-softmmu/qemu-system-x86_64
+QEMU       ?= ~/QEMU/x86_64-softmmu/qemu-system-x86_64
 # Number of CPUs to emulate
 QEMUSMP    ?= 4
 # RAM to simulate (in MB)
 QEMUMEM    ?= 4096
 # Default hardware build target.  See param.h for others.
-HW         ?= qemu
+HW         ?= josmp
 # Enable C++ exception handling in the kernel.
 EXCEPTIONS ?= y
 # Shell command to run in VM after booting
@@ -231,7 +231,7 @@ QEMUOPTS += $(QEMUEXTRA)
 qemu: $(KERN)
 	$(QEMU) $(QEMUOPTS) $(QEMUKVMFLAGS) -kernel $(KERN)
 gdb: $(KERN)
-	$(QEMU) $(QEMUOPTS) $(QEMUKVMFLAGS) -kernel $(KERN) -s
+	$(QEMU) $(QEMUOPTS) $(QEMUKVMFLAGS) -kernel $(KERN) -gdb tcp::8889 -S 
 
 codex: $(KERN)
 
