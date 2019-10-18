@@ -93,12 +93,8 @@ public:
   }
 
   paddr pa() const
-  { 
-    paddr info_pa;
-    if ((paddr)this >= 0x5000000000ull)
-        info_pa = (paddr)this - KBASE_LOW;
-    else 
-        info_pa = (paddr)this - KBASE;
+  {
+    paddr info_pa = (paddr)this - KBASE;
     page_info_map_entry *entry =
       &page_info_map[(info_pa + page_info_map_add) >> page_info_map_shift];
     return entry->phys_base + (this - entry->array) * PGSIZE;

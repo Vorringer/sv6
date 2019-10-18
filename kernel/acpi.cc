@@ -173,6 +173,7 @@ initacpitables(void)
     panic("acpi: AcpiInitializeTables failed: %s", AcpiFormatException(r));
 
   have_tables = true;
+
   // Get the MADT
   r = AcpiGetTable((char*)ACPI_SIG_MADT, 0, &hdr);
   if (ACPI_FAILURE(r) && r != AE_NOT_FOUND)

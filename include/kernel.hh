@@ -18,15 +18,11 @@ static inline uptr v2p(void *a) {
   uptr ua = (uptr) a;
   if (ua >= KCODE)
     return ua - KCODE;
-  else if (ua < KBASE)
-    return ua - KBASE_LOW;
   else
     return ua - KBASE;
 }
 
 static inline void *p2v(uptr a) {
-  if (a >= KBASEEND - KBASE) 
-      return (u8 *) a + KBASE_LOW - (KBASEEND - KBASE);
   return (u8 *) a + KBASE;
 }
 

@@ -311,23 +311,13 @@ initpg(void)
       *kpml4.find(KCODE, level).create(0) = PTE_W | PTE_P | PTE_PS | PTE_G;
       lcr3(rcr3());
     }
-    paddr pa_offset = 0;
+
     // Create direct map region
     for (auto it = kpml4.find(KBASE, level); it.index() < KBASEEND;
          it += it.span()) {
       paddr pa = it.index() - KBASE;
       *it.create(0) = pa | PTE_W | PTE_P | PTE_PS | PTE_NX | PTE_G;
-      pa_offset = pa + it.span();
-      //cprintf("initpg KBASE: pa[0x%lx], va[0x%lx]\n", pa, it.index());
     }
-    for (auto it = kpml4.find(KBASE_LOW, level); it.index() < KBASE_LOW_END;
-         it += it.span()) {
-      paddr pa = it.index() - KBASE_LOW + pa_offset;
-      *it.create(0) = pa | PTE_W | PTE_P | PTE_PS | PTE_NX | PTE_G;
-      //cprintf("initpg KBASE_LOW: pa[0x%lx], va[0x%lx]\n", pa, it.index());
-    }
-
-    
     assert(!kpml4.find(KBASEEND, level).is_set());
 
     // Create KVMALLOC area.  This doesn't map anything at this point;
