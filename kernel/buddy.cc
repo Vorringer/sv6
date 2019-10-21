@@ -1,7 +1,7 @@
 #include "buddy.hh"
-//#if BUDDY_DEBUG
+#if BUDDY_DEBUG
 #include "kstream.hh"
-//#endif
+#endif
 
 #include <cassert>
 #include <cstring>
@@ -19,8 +19,8 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
 
   uintptr_t free_base = (uintptr_t)base;
   uintptr_t free_end = (uintptr_t)base + len;
-  uintptr_t track_end = (uintptr_t)0xFFFFFF5000000000;//(uintptr_t)track_base + track_len;
-//  assert(track_base <= base && free_end <= track_end);
+  uintptr_t track_end = (uintptr_t)track_base + track_len;
+  assert(track_base <= base && free_end <= track_end);
 
   // Round tracked region out to a multiple of MAX_SIZE so that every
   // trackable block has a buddy.
@@ -67,7 +67,6 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
   // Create free block list.
   uintptr_t block_base = ((uintptr_t)base + MIN_SIZE - 1) & ~(MIN_SIZE - 1);
   uintptr_t block_end = free_end & ~(MIN_SIZE - 1);
-console.println("block base: ", block_base, " block end: ", block_end);
   for (uintptr_t block = block_base; block < block_end; ) {
     if ((block & (MAX_SIZE - 1)) == 0 && block + MAX_SIZE <= block_end) {
       // Fast path for MAX_SIZE blocks
@@ -138,7 +137,7 @@ buddy_allocator::alloc_order(size_t order)
 void
 buddy_allocator::free_order(void *ptr, size_t order)
 {
-  //assert(base <= (uintptr_t)ptr && (uintptr_t)ptr < limit);
+  assert(base <= (uintptr_t)ptr && (uintptr_t)ptr < limit);
 #if BUDDY_DEBUG && !KALLOC_BUDDY_PER_CPU
   /*
    * Per-CPU buddy allocators cannot answer is_allocated() correctly.
@@ -153,6 +152,7 @@ buddy_allocator::free_order(void *ptr, size_t order)
                      " of size ", MIN_SIZE << order, " (order ", order, ")");
 #endif
   mark_allocated(ptr, order, false);
+
   if (order < MAX_ORDER && flip_bit(ptr, order) == 0) {
     // This block's buddy is also free.  Remove the buddy from its
     // list, combine them, and free to the higher order.
