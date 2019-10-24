@@ -149,10 +149,11 @@ tramp64:
 .global kpml4
 kpml4:
 	.quad PADDR(pdpt0) + (1<<0) + (1<<1)  // present, read/write
-	.space 4096 - 3*8
+	.space 4096 - 7*8
 	// We can't just use pdpt0 because we mark pdpt0 no-execute
 	// in initpg.
 	.quad PADDR(pdptbase) + (1<<0) + (1<<1)  // present, read/write
+        .space 32
 	.quad PADDR(pdptcode) + (1<<0) + (1<<1)  // present, read/write
 
 .align 4096
@@ -171,11 +172,13 @@ pdptcode:
 	.quad PADDR(pdtcode) + (1<<0) + (1<<1)  // present, read/write
        
 .align 4096
+.global pdtbase
 pdtbase:
 	// Filled in below.
 	.space 4096
 
 .align 4096
+.global pdtcode
 pdtcode:
 	// Filled in below.
 	.space 4096

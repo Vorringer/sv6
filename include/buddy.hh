@@ -7,7 +7,7 @@
 #include "ilist.hh"
 
 #ifndef BUDDY_DEBUG
-#define BUDDY_DEBUG 1
+#define BUDDY_DEBUG 0
 #endif
 
 // Binary buddy allocator.
@@ -20,7 +20,7 @@ public:
     // The maximum order.  The higher this is, the larger blocks this
     // allocator can allocate.  The worst-case time for allocate and
     // free is proportional to MAX_ORDER.
-    MAX_ORDER = 12,
+    MAX_ORDER = 18,
     // The maximum size this allocator can allocate.
     MAX_SIZE = MIN_SIZE << MAX_ORDER,
   };

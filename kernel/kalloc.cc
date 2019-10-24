@@ -981,6 +981,15 @@ initphysmem(paddr mbaddr)
   mem.remove(0, v2p(end));
 }
 
+void print_kerndump(size_t vaddr, int nbytes) {
+    int i;
+    cprintf("Kerndump[0x%lx], [%d]: \n", (unsigned long)vaddr, nbytes);
+    for (i = 0; i < nbytes; ++i) {
+        cprintf("%02x ", *((unsigned char *)vaddr + i));
+    }
+    cprintf("\n");
+}
+
 // Initialize free list of physical pages.
 void
 initkalloc(void)
@@ -1017,7 +1026,6 @@ initkalloc(void)
     for (auto &reg : node_mem.get_regions()) {
       if (ALLOC_MEMSET)
         memset(p2v(reg.base), 1, reg.end - reg.base);
-
       // Subdivide region
       auto remaining = reg;
       while (remaining.base < remaining.end) {
@@ -1033,6 +1041,7 @@ initkalloc(void)
         auto buddy = buddy_allocator(p2v(remaining.base), subsize,
                                      p2v(reg.base), reg.end - reg.base);
 #endif
+
         if (!buddy.empty()) {
           // Get some stats
           auto stats = buddy.get_stats();
@@ -1046,6 +1055,7 @@ initkalloc(void)
         // XXX(Austin) It would be better if we knew what free_init
         // has rounded the upper bound to.
         remaining.base += subsize;
+
       }
     }
     size_t node_buddies = buddies.size() - node_low;
