@@ -62,11 +62,15 @@ void inithpet(void);
 void initrtc(void);
 void initmfs(void);
 void idleloop(void);
+void print_kerndump(size_t vaddr, int nbytes);
 
 #define IO_RTC  0x70
 
 static std::atomic<int> bstate;
 static cpuid_t bcpuid;
+
+extern char pdtbase[];
+extern char pdtcode[];
 
 void
 mpboot(void)
@@ -176,6 +180,10 @@ cmain(u64 mbmagic, u64 mbaddr)
   percpu_offsets[0] = __percpu_start;
 
   inituart();
+print_kerndump((size_t)pdtbase, 32);
+print_kerndump((size_t)pdtcode, 32);
+print_kerndump(KBASE, 32);
+print_kerndump(KCODE, 32);
   initphysmem(mbaddr);
   initpg();                // Requires initphysmem
   inithz();        // CPU Hz, microdelay

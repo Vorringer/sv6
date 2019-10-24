@@ -3,6 +3,7 @@
 #include "kstream.hh"
 #endif
 
+#include "kernel.hh"
 #include <cassert>
 #include <cstring>
 #include <iterator>
@@ -20,6 +21,11 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
   uintptr_t free_base = (uintptr_t)base;
   uintptr_t free_end = (uintptr_t)base + len;
   uintptr_t track_end = (uintptr_t)track_base + track_len;
+cprintf("track_base [0x%lx], base [0x%lx], free_end [0x%lx], track_end [0x%lx]\n",
+         (unsigned long)track_base,
+         (unsigned long)base,
+         (unsigned long)free_end,
+         (unsigned long)track_end);
   assert(track_base <= base && free_end <= track_end);
 
   // Round tracked region out to a multiple of MAX_SIZE so that every
@@ -32,6 +38,7 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
   // the free space.
   // XXX(Austin) Should we check if we have more unaligned space at
   // the end?  Currently, we skip 16 megs between each buddy region.
+  uint64_t total = 0;
   size_t nBlocks = track_len / MIN_SIZE;
   for (size_t i = 0; i < MAX_ORDER; ++i) {
     size_t bitmapSize = (nBlocks + 7) / 8;
@@ -39,6 +46,7 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
     if ((uintptr_t)base + bitmapSize >= free_end)
       // Not enough room for the tracking bitmap
       return;
+    total += bitmapSize;
     memset(orders[i].bitmap, 0, bitmapSize);
     base = (char*)base + bitmapSize;
 #if BUDDY_DEBUG
@@ -57,13 +65,11 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
 #if BUDDY_DEBUG
   orders[MAX_ORDER].debug = nullptr;
 #endif
-
   // Record the region we can track.  These must be multiples of
   // MIN_SIZE, but they will be since we've already rounded to
   // MAX_SIZE above.
   this->base = (uintptr_t)track_base;
   limit = track_end;
-
   // Create free block list.
   uintptr_t block_base = ((uintptr_t)base + MIN_SIZE - 1) & ~(MIN_SIZE - 1);
   uintptr_t block_end = free_end & ~(MIN_SIZE - 1);
@@ -77,7 +83,6 @@ buddy_allocator::buddy_allocator(void *base, size_t len,
       block += MIN_SIZE;
     }
   }
-
   free_bytes = block_end - block_base;
   bitmap_bytes = (uintptr_t)base - free_base;
   waste_bytes = block_base - (uintptr_t)base;
