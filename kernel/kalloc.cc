@@ -1016,7 +1016,7 @@ initkalloc(void)
 #if KALLOC_BUDDY_PER_CPU
     size_t subnodes = node.cpus.size();
 #else
-    size_t subnodes = 1;
+    size_t subnodes = 8;
 #endif
     size_t size_limit = (node_mem.bytes() + subnodes - 1) / subnodes;
 
@@ -1058,6 +1058,7 @@ initkalloc(void)
 
       }
     }
+
     size_t node_buddies = buddies.size() - node_low;
 
     console.println("kalloc: ", ssize(node_stats.free), " available in node ",
