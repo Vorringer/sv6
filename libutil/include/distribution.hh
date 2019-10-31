@@ -78,7 +78,7 @@ class concurrent_distribution
 {
   // XXX Use a locked hash table from thread::id to distribution<T>
   // and cache the per-thread distribution in a thread-local.
-  enum { MAX_THREADS = 100 };
+  enum { MAX_THREADS = 1024 };
 
   struct
   {

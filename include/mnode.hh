@@ -24,7 +24,7 @@ private:
   struct inumber {
     u64 v_;
     static const int type_bits = 8;
-    static const int cpu_bits = 8;
+    static const int cpu_bits = 10;
 
     inumber(u64 v) : v_(v) {}
     inumber(u8 type, u64 cpu, u64 count)
